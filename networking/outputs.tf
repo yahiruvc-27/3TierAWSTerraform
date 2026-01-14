@@ -22,5 +22,9 @@ output "project_name" {
   value       = var.project_name
 }
 
+output "s3_bucket_name" {
+  description = "S3 Products bucket name"
+  value       = var.s3_bucket_name
+}
 
 

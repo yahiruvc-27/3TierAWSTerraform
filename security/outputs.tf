@@ -30,7 +30,7 @@ output "app_instance_profile_name" {
 }
 
 output "s3_bucket_name" {
-  value = var.s3_bucket_name
+  value = data.terraform_remote_state.networking.outputs.s3_bucket_name
 
 }
 

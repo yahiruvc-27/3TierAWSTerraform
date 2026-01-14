@@ -8,7 +8,7 @@ data "terraform_remote_state" "networking" {
 
 data "aws_s3_bucket" "s3_products_bucket" {
   # Manually created s3 bucket to reference here
-  bucket = var.s3_bucket_name
+  bucket = data.terraform_remote_state.networking.outputs
 }
 
 
@@ -397,31 +397,6 @@ data "aws_iam_policy_document" "web_policy_data" {
   }
 }
 
-# Create the policy for web role, least priviledge principle 
-# data "aws_iam_policy_document" "app_policy_data" {
-#   statement {
-#     effect = "Allow"
-
-#     actions = [
-#     	"ses:SendEmail",
-#     	"ses:SendRawEmail"
-#     ]
-
-#     resources = ["*"]
-#   }
-
-#   statement {
-#     effect = "Allow"
-
-#     actions = [
-#       "logs:CreateLogGroup",
-#       "logs:CreateLogStream",
-#       "logs:PutLogEvents"
-#     ]
-
-#     resources = ["*"]
-#   }
-# }
 
 data "aws_caller_identity" "current" {}
 

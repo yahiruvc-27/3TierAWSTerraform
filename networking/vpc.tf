@@ -165,4 +165,59 @@ resource "aws_route_table_association" "as-database" {
 
   subnet_id      = each.value.id
   route_table_id = aws_route_table.database-rt.id
-} 
+}
+
+# Gateway Endpoint for S3
+# Add security
+# EC2 IAM Role & VPC Endpoint Policy & Private Bucket
+
+data "aws_s3_bucket" "s3_products_bucket" {
+  # Manually created s3 bucket to reference here
+  bucket = var.s3_bucket_name
+}
+data "aws_vpc_endpoint_service" "s3_service" {
+
+  service      = "s3"
+  service_type = "Gateway"
+}
+
+resource "aws_vpc_endpoint" "s3_gw_endpoint" {
+
+  vpc_id            = aws_vpc.main-vpc.id
+  service_name      = data.aws_vpc_endpoint_service.s3_service.service_name
+  vpc_endpoint_type = "Gateway" # Needed GW EndP for S3
+
+  route_table_ids = [
+    aws_route_table.private-rt.id
+  ]
+
+  policy = data.aws_iam_policy_document.s3_endpoint_policy.json
+
+  tags = {
+    Name = "s3-gateway-endpoint"
+  }
+}
+
+data "aws_iam_policy_document" "s3_endpoint_policy" {
+  statement {
+    sid    = "AllowWebTierReadOnlyImages-Read Products"
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetBucketLocation"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.s3_products_bucket.arn,
+      "${data.aws_s3_bucket.s3_products_bucket.arn}/*"
+    ]
+  }
+}
+

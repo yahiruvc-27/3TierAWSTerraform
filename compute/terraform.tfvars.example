@@ -1,0 +1,8 @@
+# This is a example, fill with real desired values
+# Instance size for both tiers
+web_instance_size     = "t2.micro"
+app_instance_size     = "t2.micro"
+
+# Key pair names -> must exist 
+app_key_pair_name = "MiniAmazon-privateAPP-EC2"
+web_key_pair_name = "MiniAmazon-privateWEB-EC2"

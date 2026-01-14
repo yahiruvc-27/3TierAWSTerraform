@@ -1,0 +1,4 @@
+# This is a example, fill with real desired values
+aws_region = "us-east-1"
+s3_bucket_name = "bucket_name_example"
+database_password_parameter_name = "parameter/name/example"

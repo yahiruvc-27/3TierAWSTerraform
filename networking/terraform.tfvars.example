@@ -1,0 +1,53 @@
+# This is a example, fill with real desired values
+project_name = "project_name_example"
+
+vpc_cidr = "10.0.0.0/16"
+
+public_subnets = {
+  public_a = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1a"
+    name = "public-a"
+  }
+  public_b = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1b"
+    name = "public-b"
+  }
+}
+
+private_subnets = {
+  private-a-web = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1a"
+    name = "private-A-WEB"
+  }
+  private-b-web = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1b"
+    name = "private-B-WEB"
+  }
+  private-a-app = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1a"
+    name = "private-A-APP"
+  }
+  private-b-app = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1b"
+    name = "private-B-APP"
+  }
+}
+
+database-subnets = {
+  private-a-db = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1a"
+    name = "private-A-DB"
+  }
+  private-b-db = {
+    cidr = "0.0.0.0/32"
+    az   = "us-east-1b"
+    name = "private-B-DB"
+  }
+}

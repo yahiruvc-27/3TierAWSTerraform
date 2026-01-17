@@ -1,6 +1,6 @@
 # Create a TG to register WEB EC2 instances
 resource "aws_lb_target_group" "web_tg" {
-  name     = "${var.project_name}-web-tg"
+  name     = "${data.terraform_remote_state.networking.outputs.project_name}-web-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.terraform_remote_state.networking.outputs.vpc_id
@@ -17,7 +17,7 @@ resource "aws_lb_target_group" "web_tg" {
 
 # Public ALB for private WEB tier, the systems public door
 resource "aws_lb" "web_alb" {
-  name               = "${var.project_name}-web-alb"
+  name               = "${data.terraform_remote_state.networking.outputs.project_name}-web-alb"
   internal           = false
   load_balancer_type = "application"
 
@@ -44,7 +44,7 @@ resource "aws_lb_listener" "web_http" {
 
 # Cretae ASG = Public ALB + WEB TG
 resource "aws_autoscaling_group" "web_asg" {
-  name = "${var.project_name}-web-asg"
+  name = "${data.terraform_remote_state.networking.outputs.project_name}-web-asg"
 
   # Number of desired instances 
   min_size         = 1
@@ -76,13 +76,13 @@ resource "aws_autoscaling_group" "web_asg" {
 
   tag {
     key                 = "Name"
-    value               = "${var.project_name}-web"
+    value               = "${data.terraform_remote_state.networking.outputs.project_name}-web"
     propagate_at_launch = true
   }
 }
 # Create ASG, TargetTrackingPolicy for APP ASG
 resource "aws_autoscaling_policy" "web_cpu_scaling" {
-  name                   = "${var.project_name}-web-cpu-scaling"
+  name                   = "${data.terraform_remote_state.networking.outputs.project_name}-web-cpu-scaling"
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
   policy_type            = "TargetTrackingScaling"
 
@@ -91,6 +91,6 @@ resource "aws_autoscaling_policy" "web_cpu_scaling" {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
     # Target CPU usage %
-    target_value = 40.0
+    target_value = 50.0
   }
 }

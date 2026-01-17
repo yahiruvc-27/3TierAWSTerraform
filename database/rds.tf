@@ -34,7 +34,7 @@ resource "aws_db_instance" "rds_instance" {
   password = aws_ssm_parameter.db_password.value
 
   db_subnet_group_name = aws_db_subnet_group.db_subnets.name
-  #vpc_security_group_ids = [data.terraform_remote_state.security.outputs.database_sg_id]
+  vpc_security_group_ids = [data.terraform_remote_state.security.outputs.database_sg_id]
 
   publicly_accessible = false
   multi_az            = false

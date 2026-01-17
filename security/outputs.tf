@@ -36,5 +36,4 @@ output "s3_bucket_name" {
 
 output "db_password_parameter_name" {
   value = var.database_password_parameter_name
-
 }

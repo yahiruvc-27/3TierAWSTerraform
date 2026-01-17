@@ -1,6 +1,6 @@
 # Create a TG to register APP EC2 instances
 resource "aws_lb_target_group" "app_tg" {
-  name     = "${var.project_name}-app-tg"
+  name     = "${data.terraform_remote_state.networking.outputs.project_name}-app-tg"
   port     = 5000
   protocol = "HTTP"
   vpc_id   = data.terraform_remote_state.networking.outputs.vpc_id
@@ -18,7 +18,7 @@ resource "aws_lb_target_group" "app_tg" {
 
 # Internal ALB for private app tier
 resource "aws_lb" "app_alb" {
-  name               = "${var.project_name}-app-alb"
+  name               = "${data.terraform_remote_state.networking.outputs.project_name}-app-alb"
   internal           = true
   load_balancer_type = "application"
 
@@ -48,7 +48,7 @@ resource "aws_lb_listener" "app_http" {
 }
 # Cretae ASG = Internal ALB + APP TG
 resource "aws_autoscaling_group" "app_asg" {
-  name = "${var.project_name}-app-asg"
+  name = "${data.terraform_remote_state.networking.outputs.project_name}-app-asg"
 
   # Number of desired instances 
   min_size         = 1
@@ -80,13 +80,13 @@ resource "aws_autoscaling_group" "app_asg" {
 
   tag {
     key                 = "Name"
-    value               = "${var.project_name}-app"
+    value               = "${data.terraform_remote_state.networking.outputs.project_name}-app"
     propagate_at_launch = true
   }
 }
 # Create ASG, TargetTrackingPolicy for APP ASG
 resource "aws_autoscaling_policy" "app_cpu_scaling" {
-  name                   = "${var.project_name}-app-cpu-scaling"
+  name                   = "${data.terraform_remote_state.networking.outputs.project_name}-app-cpu-scaling"
   autoscaling_group_name = aws_autoscaling_group.app_asg.name
   policy_type            = "TargetTrackingScaling"
 

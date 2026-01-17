@@ -34,13 +34,13 @@ data "aws_ssm_parameter" "db_password" {
 
 # === 2.- Create and configure instance APP tier====
 # UNCOMMENT THIS BLOCKblock  to create a single APP tier instance
+
 # resource "aws_instance" "app_ec2" {
 #   ami           = data.aws_ami.ami_amazon_linux_2023.id
 #   instance_type = var.app_instance_size
 
 #   #subnet_id = aws_subnet.private_sb["private-a-app"].id
 #   subnet_id = data.terraform_remote_state.networking.outputs.private_subnet_ids["private-a-app"]
-
 
 #   vpc_security_group_ids = [
 #     data.terraform_remote_state.security.outputs.app_sg_id
@@ -53,29 +53,32 @@ data "aws_ssm_parameter" "db_password" {
 #   #iam_instance_profile = aws_iam_instance_profile.app_profile.name
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.app_instance_profile_name
 
-#   #user_data = file("${path.module}/userdata/app-user-data.sh")
-#   user_data = templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
-#     #rds_endpoint = data.terraform_remote_state.database.outputs.db_endpoint
-#     # This searches for a colon followed by digits at the end of the string and removes them
-#     rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint, "/:[0-9]+$/", "")
-#     db_user      = data.terraform_remote_state.database.outputs.db_username
-#     db_pass      = data.aws_ssm_parameter.db_password.value
-#   })
+#   user_data = base64encode(
+#     templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
+#       rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
+#       "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
+#       db_user = data.terraform_remote_state.database.outputs.db_username
+#       #db_pass = data.aws_ssm_parameter.db_password.value # we dont want text plain pass
+#       # pass the SSM param value 
+#       db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
+#     })
+#   )
 
 #   root_block_device {
-#     volume_size = 8
+#     volume_size = 30
 #     volume_type = "gp2"
 #   }
 
 #   tags = {
-#     Name = "${var.project_name}-app-ec2"
+#     Name = "${data.terraform_remote_state.networking.outputs.project_name}-app-ec2"
 #     Tier = "app"
 #   }
 # }
 
 # === 2. CREATE Lunch Template APP Tier ===
+
 resource "aws_launch_template" "app_launch_template" {
-  name_prefix   = "${var.project_name}-app-"
+  name_prefix   = "${data.terraform_remote_state.networking.outputs.project_name}-app-"
   image_id      = data.aws_ami.ami_amazon_linux_2023.id # AMI
   instance_type = var.app_instance_size                 # Instance class and size
 
@@ -97,7 +100,8 @@ resource "aws_launch_template" "app_launch_template" {
       rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
       "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
       db_user = data.terraform_remote_state.database.outputs.db_username
-      db_pass = data.aws_ssm_parameter.db_password.value
+      # pass the SSM param value 
+      db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
     })
   )
 
@@ -116,7 +120,7 @@ resource "aws_launch_template" "app_launch_template" {
     resource_type = "instance"
 
     tags = {
-      Name = "${var.project_name}-app"
+      Name = "${data.terraform_remote_state.networking.outputs.project_name}-app"
       Tier = "app"
     }
   }

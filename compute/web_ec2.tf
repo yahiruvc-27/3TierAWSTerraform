@@ -18,12 +18,13 @@ data "aws_s3_bucket" "s3_products_bucket" {
 
 # 2.- Create and configure instance WEB tier
 # uncoment this block of code to create a single WEB tier instance
+
 # resource "aws_instance" "web_ec2" {
 #   ami           = data.aws_ami.ami_amazon_linux_2023.id
 #   instance_type = var.web_instance_size
 
 #   subnet_id = data.terraform_remote_state.networking.outputs.private_subnet_ids["private-a-web"]
-#   #subnet_id = data.terraform_remote_state.networking.outputs.public_subnet_ids["public_a"]
+  
 
 
 #   vpc_security_group_ids = [
@@ -38,27 +39,27 @@ data "aws_s3_bucket" "s3_products_bucket" {
 
 #   #user_data = file("${path.module}/userdata/web.sh")
 
-#   user_data = templatefile("${path.module}/userdata/web-user-data.sh.tpl", {
-#     s3_bucket  = data.aws_s3_bucket.s3_products_bucket.bucket
-#     #ip_backend = aws_instance.app_ec2.private_ip
-#     ip_backend = aws_lb.app_alb.dns_name
-
-#   })
+#   user_data = base64encode(
+#     templatefile("${path.module}/userdata/web-user-data.sh.tpl", {
+#       s3_bucket    = data.aws_s3_bucket.s3_products_bucket.bucket
+#       backend_host = aws_instance.app_ec2.private_ip
+#     })
+#   )
 
 #   root_block_device {
-#     volume_size = 8
+#     volume_size = 30
 #     volume_type = "gp2"
 #   }
 
 #   tags = {
-#     Name = "${var.project_name}-web-ec2"
+#     Name = "${data.terraform_remote_state.networking.outputs.project_name}-web-ec2"
 #     Tier = "web"
 #   }
 # }
 
 # === 2. CREATE Lunch Template WEB Tier ===
 resource "aws_launch_template" "web_launch_template" {
-  name_prefix   = "${var.project_name}-web-"
+  name_prefix   = "${data.terraform_remote_state.networking.outputs.project_name}-web-"
   image_id      = data.aws_ami.ami_amazon_linux_2023.id
   instance_type = var.web_instance_size # Instance class and size
 
@@ -97,7 +98,7 @@ resource "aws_launch_template" "web_launch_template" {
     resource_type = "instance"
 
     tags = {
-      Name = "${var.project_name}-web"
+      Name = "${data.terraform_remote_state.networking.outputs.project_name}-web"
       Tier = "web"
     }
   }

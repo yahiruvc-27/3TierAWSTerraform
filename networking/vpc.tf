@@ -175,6 +175,7 @@ data "aws_s3_bucket" "s3_products_bucket" {
   # Manually created s3 bucket to reference here
   bucket = var.s3_bucket_name
 }
+
 data "aws_vpc_endpoint_service" "s3_service" {
 
   service      = "s3"
@@ -219,5 +220,26 @@ data "aws_iam_policy_document" "s3_endpoint_policy" {
       "${data.aws_s3_bucket.s3_products_bucket.arn}/*"
     ]
   }
+  
+  # Statement 2: The Fix for Linux Packages
+  statement {
+    sid    = "AllowAmazonLinuxRepoAccess"
+    effect = "Allow"
+    principals {
+      type = "*"
+      identifiers = ["*"] 
+    }
+
+    actions   = ["s3:GetObject"]
+    
+    # These are the ARNs for Amazon Linux repositories in us-east-1
+    resources = [
+      "arn:aws:s3:::al2023-repos-us-east-1-*/*",
+      "arn:aws:s3:::amazonlinux.us-east-1.amazonaws.com/*",
+      "arn:aws:s3:::amazonlinux-2-repos-us-east-1/*",
+      "arn:aws:s3:::packages.us-east-1.amazonaws.com/*"
+    ]
+  }
+
 }
 

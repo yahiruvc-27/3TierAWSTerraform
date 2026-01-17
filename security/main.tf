@@ -8,7 +8,7 @@ data "terraform_remote_state" "networking" {
 
 data "aws_s3_bucket" "s3_products_bucket" {
   # Manually created s3 bucket to reference here
-  bucket = data.terraform_remote_state.networking.outputs
+  bucket = data.terraform_remote_state.networking.outputs.s3_bucket_name
 }
 
 

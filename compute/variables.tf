@@ -1,8 +1,3 @@
-variable "project_name" {
-  description = "Prefix for resource naming"
-  type        = string
-}
-
 variable "web_key_pair_name" {
   description = "Key pair names to Associate with instances"
   type        = string
@@ -21,10 +16,5 @@ variable "app_instance_size" {
 variable "app_key_pair_name" {
 
   description = "Prefix for resource naming"
-  type        = string
-}
-
-variable "instance_size" {
-  description = "EC2 instance size"
   type        = string
 }

@@ -6,5 +6,4 @@ variable "database_name" {
 variable "db_username" {
   description = "Master DB username"
   type        = string
-
 }

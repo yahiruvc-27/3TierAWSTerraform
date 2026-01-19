@@ -24,7 +24,7 @@ data "aws_s3_bucket" "s3_products_bucket" {
 #   instance_type = var.web_instance_size
 
 #   subnet_id = data.terraform_remote_state.networking.outputs.private_subnet_ids["private-a-web"]
-  
+
 
 
 #   vpc_security_group_ids = [

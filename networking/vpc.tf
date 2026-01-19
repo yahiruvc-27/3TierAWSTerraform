@@ -220,18 +220,18 @@ data "aws_iam_policy_document" "s3_endpoint_policy" {
       "${data.aws_s3_bucket.s3_products_bucket.arn}/*"
     ]
   }
-  
+
   # Statement 2: The Fix for Linux Packages
   statement {
     sid    = "AllowAmazonLinuxRepoAccess"
     effect = "Allow"
     principals {
-      type = "*"
-      identifiers = ["*"] 
+      type        = "*"
+      identifiers = ["*"]
     }
 
-    actions   = ["s3:GetObject"]
-    
+    actions = ["s3:GetObject"]
+
     # These are the ARNs for Amazon Linux repositories in us-east-1
     resources = [
       "arn:aws:s3:::al2023-repos-us-east-1-*/*",

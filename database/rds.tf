@@ -19,15 +19,15 @@ data "terraform_remote_state" "security" {
 
 # === 3. Create RDS Instance ===
 resource "aws_db_instance" "rds_instance" {
-  identifier = var.database_name
+  identifier = var.database_name # The name of the DB
 
   engine         = "mysql"
   engine_version = "8.0.43"
 
   instance_class = "db.t4g.micro"
 
-  allocated_storage = 20
-  storage_type      = "gp2"
+  allocated_storage = 20 # Disk size of RDS instance
+  storage_type      = "gp2" # Tune for desired  performance
 
   db_name  = var.database_name
   username = var.db_username
@@ -37,11 +37,11 @@ resource "aws_db_instance" "rds_instance" {
   vpc_security_group_ids = [data.terraform_remote_state.security.outputs.database_sg_id]
 
   publicly_accessible = false
-  multi_az            = false
+  multi_az            = false # Create a standby sycronus instance for HA (no read replica)
 
-  backup_retention_period = 0
-  skip_final_snapshot     = true
-  deletion_protection     = false
+  backup_retention_period = 0 # For how may days we mantain a backup
+  skip_final_snapshot     = true # Create a snapshot (copy of last RDS instance state) before termination
+  deletion_protection     = false # Avoid mistakes -> a must for PRO env 
 
   tags = {
     Name = "${data.terraform_remote_state.networking.outputs.project_name}-mysql-rds"

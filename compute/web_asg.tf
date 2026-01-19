@@ -15,7 +15,7 @@ resource "aws_lb_target_group" "web_tg" {
   }
 }
 
-# Public ALB for private WEB tier, the systems public door
+# Public ALB for private WEB tier, the system's public door
 resource "aws_lb" "web_alb" {
   name               = "${data.terraform_remote_state.networking.outputs.project_name}-web-alb"
   internal           = false
@@ -25,12 +25,13 @@ resource "aws_lb" "web_alb" {
   security_groups = [
     data.terraform_remote_state.security.outputs.public_alb_sg_id
   ]
-
+  # Use all Public facing subnets 
   subnets = values(
     data.terraform_remote_state.networking.outputs.public_subnet_ids
   )
 }
-# What is the ALB going to listen to: HTTP:80 -> forward -> WEB target gp 
+
+# What is the ALB going to listen to = HTTP:80 -> forward -> WEB target gp 
 resource "aws_lb_listener" "web_http" {
   load_balancer_arn = aws_lb.web_alb.arn
   port              = 80
@@ -51,6 +52,7 @@ resource "aws_autoscaling_group" "web_asg" {
   desired_capacity = 2
   max_size         = 3
 
+  # use all the "web" subnets
   vpc_zone_identifier = [
     for key, id in data.terraform_remote_state.networking.outputs.private_subnet_ids :
     id if length(regexall(".*-web", key)) > 0
@@ -59,11 +61,13 @@ resource "aws_autoscaling_group" "web_asg" {
   health_check_type         = "ELB"
   health_check_grace_period = 80
 
+  # select what LT its gong to use = what instance is the ASG going to use
   launch_template {
     id      = aws_launch_template.web_launch_template.id
     version = "$Latest"
   }
 
+  # Attach to designated TG
   target_group_arns = [
     aws_lb_target_group.web_tg.arn
   ]
@@ -80,6 +84,7 @@ resource "aws_autoscaling_group" "web_asg" {
     propagate_at_launch = true
   }
 }
+
 # Create ASG, TargetTrackingPolicy for APP ASG
 resource "aws_autoscaling_policy" "web_cpu_scaling" {
   name                   = "${data.terraform_remote_state.networking.outputs.project_name}-web-cpu-scaling"

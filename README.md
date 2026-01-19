@@ -2,6 +2,8 @@
 
 This is my personal learning project that provisions a highly available (2 AZ), auto-scaling 3-tier architecture on AWS using Terraform.
 
+My focus is on cloud (system design, debugging and eperimentation), IaC (terraform), service integration, HA, security and at the end user experience (this is not a software developer project, its a Cloud and Infra project)
+
 VERSION 1.0 MVP
 
 ## Architecture
@@ -31,5 +33,19 @@ terraform/
 ## Key Features
 - No hardcoded IPs
 - No secrets in code
-- Self-healing infrastructure
-- Designed for future HTTPS & CI/CD
+- ASG HA infrastructure
+- Created, tested and validated first by hand -> AWS Console
+- Turned into IaC lerning (big learning moments, debugg and documentation reading)
+
+## Future work
+
+Security
+- Use HTTPS ACM (Register a domain name)
+- Use SSM session manager (delete SSH, key pairs and bastion host)
+
+Functionality
+- Add analytics (sales)
+- Log Inn (Account creation and auth for the user)
+- Add SQS (Buffer for requests)
+
+

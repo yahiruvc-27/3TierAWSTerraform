@@ -8,7 +8,7 @@ Create RDS MYSQL Instance
 - Database SG
 - SSM SecureString parameter for DB password
 
-## Design Decisions
+## Design Characteristics
 - Schema and connection parameters data sent throouhj outputs
 - Password generated automatically and stored in SSM
 - No public accessibility
@@ -23,4 +23,6 @@ See `/schema/schema.sql`.
 Must be applied **after networking and security**.
 
 ```bash
+terraform init
+terraform plan
 terraform apply

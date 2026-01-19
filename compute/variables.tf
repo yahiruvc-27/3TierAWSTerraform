@@ -18,3 +18,10 @@ variable "app_key_pair_name" {
   description = "Prefix for resource naming"
   type        = string
 }
+
+variable "backend_l_port" {
+
+  description = "Backend listening port"
+  type        = number
+}
+

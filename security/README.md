@@ -19,7 +19,7 @@ This module defines SG, Instance profiles (EC2) and IAM Policies.
   - (WEB) CW Logs, S3 read only
   - (App) Send emails, CW Logs, SSM Parameter get
 
-## Design Decisions
+## Design Characteristics
 - Least-privilege IAM policies
 - No secrets on plain text
 

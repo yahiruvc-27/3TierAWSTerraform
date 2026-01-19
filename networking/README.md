@@ -12,7 +12,7 @@ Use Terrform to provision only the esential networking infrastructure for the pr
 - Route tables and associations
 - VPC Gateway Endpoint for S3 (private access) [*Must have an existing S3]
 
-## Design Decisions
+## Design Characteristics
 - Private subnets for Web App (EC2), and DB (RDS) tiers
 - NAT Gateway used  for outbound Linux package download
 - S3 accessed via Gateway Endpoint (with IAM policy attached), associated to Private RT

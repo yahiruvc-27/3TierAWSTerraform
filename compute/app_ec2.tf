@@ -35,7 +35,7 @@ data "aws_ssm_parameter" "db_password" {
 # === 2.- Create and configure instance APP tier====
 # UNCOMMENT THIS BLOCKblock  to create a single APP tier instance
 
-# resource "aws_instance" "app_ec2" {
+# resource "aws_launch_template" "app_ec2" {
 #   ami           = data.aws_ami.ami_amazon_linux_2023.id
 #   instance_type = var.app_instance_size
 

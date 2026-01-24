@@ -22,6 +22,7 @@ SCHEMA_FILE="$${APP_DIR}/schema.sql"
 SERVICE_SRC="$${APP_DIR}/mini-amazon.service"
 SERVICE_DST="/etc/systemd/system/mini-amazon.service"
 
+# get SSM parameter 
 db_pass=$(aws ssm get-parameter --name "${db_pass_param_name}" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
 
 # DB Variables
@@ -31,8 +32,9 @@ DB_PASS="$${db_pass}"
 DB_NAME="store"
 
 # Region and email source
+
 AWS_REGION=us-east-1
-SES_SOURCE=yahiruvc@gmail.com
+SES_SOURCE=yahiruvc@gmail.com # modify with validated SES AWS source
 
 # ------------------------------------------------------------
 # === 3. Clone APP code from Git Hub ===
@@ -53,6 +55,7 @@ fi
 # ------------------------------------------------------------
 # The service runs with ec2-user as owner, if you modify the guinicorn flask service, 
 # beware that u must select the user here as owner
+
 sudo pip3 install -r "$${APP_DIR}/requirements.txt"
 
 # ------------------------------------------------------------
@@ -103,7 +106,7 @@ else
 
   # === validate DB schema file existance ===
   if [ ! -f "$${SCHEMA_FILE}" ]; then
-    echo "[ERROR] Schema file not found: $${SCHEMA_FILE}"
+    echo "[ERROR] Schema file not found (missing in Git Hub): $${SCHEMA_FILE}"
     exit 1 # exit code 1
   fi
 
@@ -113,12 +116,12 @@ else
   if ! mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" \
       -e "USE $${DB_NAME}" >/dev/null 2>&1; then
 
-    echo "[INFO] Databse Schema not found. runing schema.sql..."
+    echo "[INFO] Databse Schema not initialized,  runing schema.sql..."
     # If it doesnt exist create it
     mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" < "$${SCHEMA_FILE}"
 
   else
-    echo "[INFO] Database Schema already exists. Skipping initialization."
+    echo "[INFO] Database Sschema already exists. Skipping initialization."
   fi
 fi
 
@@ -135,10 +138,6 @@ AWS_REGION=$${AWS_REGION}
 SES_SOURCE=$${SES_SOURCE}
 EOF
 
-# fix permissions
-# chmod 600 "$${ENV_FILE}"
-# chown root:root "$${ENV_FILE}"
-
 # ------------------------------------------------------------
 # 8. Ensure correct ownership APP files (GitHUb)
 # ------------------------------------------------------------
@@ -147,7 +146,6 @@ chown -R ec2-user:ec2-user "$${APP_DIR}"
 # ------------------------------------------------------------
 # 9. Install systemd service file (COPY to needed path)
 # ------------------------------------------------------------
-
 
 if [ ! -f "$${SERVICE_DST}" ]; then
   echo "Installing guinicorn systemd service file..."
@@ -161,7 +159,6 @@ fi
 if ! grep -q "^EnvironmentFile=$${ENV_FILE}" "$${SERVICE_DST}"; then
   sed -i "/^\[Service\]/a EnvironmentFile=$${ENV_FILE}" "$${SERVICE_DST}"
 fi
-
 
 # ------------------------------------------------------------
 # 11. Reload systemd and start service

@@ -369,6 +369,9 @@ resource "aws_iam_role" "app_role" {
 
 # Create the policy for web role, least priviledge principle 
 data "aws_iam_policy_document" "web_policy_data" {
+  # ------------------------------------------------------------
+  # 1. S3 methods Get/ list Bcukets – obtain product images
+  # ------------------------------------------------------------
   statement {
     effect = "Allow"
 
@@ -383,7 +386,9 @@ data "aws_iam_policy_document" "web_policy_data" {
       "${data.aws_s3_bucket.s3_products_bucket.arn}/*"
     ]
   }
-
+  # ------------------------------------------------------------
+  # 2. CloudWatch Logs – app logging
+  # ------------------------------------------------------------
   statement {
     effect = "Allow"
 
@@ -458,6 +463,23 @@ data "aws_iam_policy_document" "app_policy_data" {
 
     resources = ["*"]
   }
+}
+# === Enable SSM Session manager =====
+# 1. AWS Managed Policy ARN AmazonSSMManagedInstanceCore 
+locals {
+  ssm_managed_policy = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# 2. Attach SSM policy to the WEB role
+resource "aws_iam_role_policy_attachment" "web_ssm_attach" {
+  role       = aws_iam_role.web_role.name
+  policy_arn = local.ssm_managed_policy
+}
+
+# 3. Attach SSM policy to the APP role
+resource "aws_iam_role_policy_attachment" "app_ssm_attach" {
+  role       = aws_iam_role.app_role.name
+  policy_arn = local.ssm_managed_policy
 }
 
 

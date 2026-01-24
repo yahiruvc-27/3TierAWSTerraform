@@ -4,8 +4,8 @@ web_instance_size     = "t2.micro"
 app_instance_size     = "t2.micro"
 
 # Key pair names -> must exist 
-app_key_pair_name = "MiniAmazon-privateAPP-EC2"
-web_key_pair_name = "MiniAmazon-privateWEB-EC2"
+app_key_pair_name = "Mykey-privateAPP-EC2"
+web_key_pair_name = "Mykey-privateWEB-EC2"
 
 # Ports
 backend_l_port = 9999

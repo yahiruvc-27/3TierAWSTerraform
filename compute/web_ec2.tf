@@ -1,6 +1,6 @@
 # === 1. get lates Linux AWS AMI DYNAMICALLY ====
 # tf will search for latest version (region safe)
-data "aws_ami" "ami_amazon_linux_2023" {
+data "aws_ami" "ami_amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -20,12 +20,10 @@ data "aws_s3_bucket" "s3_products_bucket" {
 # uncoment this block of code to create a single WEB tier instance
 
 # resource "aws_instance" "web_ec2" {
-#   ami           = data.aws_ami.ami_amazon_linux_2023.id
+#   ami           = data.aws_ami.ami_amazon_linux.id
 #   instance_type = var.web_instance_size
 
 #   subnet_id = data.terraform_remote_state.networking.outputs.private_subnet_ids["private-a-web"]
-
-
 
 #   vpc_security_group_ids = [
 #     data.terraform_remote_state.security.outputs.web_sg_id
@@ -60,7 +58,7 @@ data "aws_s3_bucket" "s3_products_bucket" {
 # === 2. CREATE Lunch Template WEB Tier ===
 resource "aws_launch_template" "web_launch_template" {
   name_prefix   = "${data.terraform_remote_state.networking.outputs.project_name}-web-"
-  image_id      = data.aws_ami.ami_amazon_linux_2023.id
+  image_id      = data.aws_ami.ami_amazon_linux.id
   instance_type = var.web_instance_size # Instance class and size
 
   # Associate EC2 Instance Key Pair

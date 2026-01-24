@@ -35,8 +35,8 @@ data "aws_ssm_parameter" "db_password" {
 # === 2.- Create and configure instance APP tier====
 # UNCOMMENT THIS BLOCKblock  to create a single APP tier instance
 
-# resource "aws_launch_template" "app_ec2" {
-#   ami           = data.aws_ami.ami_amazon_linux_2023.id
+# resource "aws_instance" "app_ec2" {
+#   ami           = data.aws_ami.ami_amazon_linux.id
 #   instance_type = var.app_instance_size
 
 #   #subnet_id = aws_subnet.private_sb["private-a-app"].id
@@ -79,7 +79,7 @@ data "aws_ssm_parameter" "db_password" {
 
 resource "aws_launch_template" "app_launch_template" {
   name_prefix   = "${data.terraform_remote_state.networking.outputs.project_name}-app-"
-  image_id      = data.aws_ami.ami_amazon_linux_2023.id # AMI
+  image_id      = data.aws_ami.ami_amazon_linux.id # AMI
   instance_type = var.app_instance_size                 # Instance class and size
 
   # Associate EC2 Instance Key Pair

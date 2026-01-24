@@ -27,44 +27,62 @@ Shared Infrastructure
 - Security Groups with least-privilege rules
 - IAM Roles & Instance Profiles for EC2
 
--S3 Gateway Endpoint (private S3 access)
--SSM Parameter Store (SecureString secrets)
+- S3 Gateway Endpoint (private S3 access)
+- SSM Parameter Store (SecureString secrets)
 
 ## Terraform Structure
 
 terraform/
-├── networking/   # VPC, subnets, routes, endpoints
-├── security/     # Security Groups, IAM roles
-├── database/     # RDS, subnet groups
-├── compute/      # EC2, ASG, ALB, Launch Templates
+- networking/   # VPC, subnets, routes, endpoints
+- security/     # Security Groups, IAM roles
+- database/     # RDS, subnet groups
+- compute/      # EC2, ASG, ALB, Launch Templates
 
 ## System Diagram
+*Click to se diagram*
 
 [![Full Architecture](docs/architecture/full-architecture.png)](docs/architecture/full-architecture.pdf)
 
+[Load Products Flow](docs/architecture/load-products-flow.pdf)
+
+[Purchase Products Flow](docs/architecture/purchase-flow.pdf)
 
 ## How to Run This Project
 
 ### Prerequisites
 
-AWS Account (access key + secret access key on aws config)
-Terraform
-AWS CLI configured
-SSH key (optional, for SSH/debug Linux instances) -> comming soom SSM Session manager
+1. AWS Account (access key + secret access key on aws config)
+2. Terraform
+3. AWS CLI configured
+4. SSH key (optional, for SSH/debug Linux instances) -> comming soom SSM Session manager
+5. SES verified source
+6. S3 bucket with 6 .jpeg images
+- Create {bucket_name} bucket -> place {bucket_name} in networking/terraform.tfvars
+- Enable bucket encryption: S3 managed keys  (SSE-S3)
+- Block public access
+- Upoad the 6 .jpeg images
 
 ### Step-by-Step Deployment
+Do -> terraform (init, plan, apply) in each of the modules in order
+1. /networking/
+2. /security/
+3. /database/
+4. /compute/
 
-1. networking terraform (init, plan, apply)
-2. security terraform (init, plan, apply)
-3. database terraform (init, plan, apply)
-4. compute terraform (init, plan, apply)
+*Each root module consumes outputs from the previous one via terraform_remote_state
 
-Each layer consumes outputs from the previous one via terraform_remote_state
+### Step-by-Step Destruction
+Do terrafrom destroy in each of the modules in inverse order creation
+
+1. /compute/
+2. /database/
+3. /security/
+4. /networking/
 
 ## Important Design Decisions
-- RDS start-up (schema, db, table creation)
-- Security (IAM policies / Roles ... )
-- EC2 User Data
+- RDS start-up (schema, db, table creation) in a ASG enviroment
+- Security (IAM policies / Roles, SG, endpoint, IAM Policies... )
+- EC2 User Data templates
 - IaC (big learning moments, debugg and reading documentation)
 
 ## Future work
@@ -75,7 +93,7 @@ Security
 
 Functionality
 - Log Inn (Account creation and auth for the user)
-- Add SQS (Buffer for requests)
+- Add SQS (Decouple & Async order processing)
 - Add analytics (sales)
 
 

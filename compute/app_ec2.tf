@@ -53,16 +53,16 @@ data "aws_ssm_parameter" "db_password" {
 #   #iam_instance_profile = aws_iam_instance_profile.app_profile.name
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.app_instance_profile_name
 
-#   user_data = base64encode(
-#     templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
-#       rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
-#       "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
-#       db_user = data.terraform_remote_state.database.outputs.db_username
-#       #db_pass = data.aws_ssm_parameter.db_password.value # we dont want text plain pass
-#       # pass the SSM param value 
-#       db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
-#     })
-#   )
+  # user_data = base64encode(
+  #   templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
+  #     rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
+  #     "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
+  #     db_user = data.terraform_remote_state.database.outputs.db_username
+  #     #db_pass = data.aws_ssm_parameter.db_password.value # we dont want text plain pass
+  #     # pass the SSM param value 
+  #     db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
+  #   })
+  # )
 
 #   root_block_device {
 #     volume_size = 30

@@ -4,7 +4,7 @@
 # Idempotent -> Terraform 
 # ============================================================
 set -euxo pipefail  # Better debugging (print commands, exit on error)
-echo "[INFO] Starting APP tier bootstrap..."
+echo "[INFO] Starting APP tier user data..."
 
 # ------------------------------------------------------------
 # === 1. Update and install packages ===
@@ -13,70 +13,88 @@ dnf update -y
 dnf install -y python3-pip git mariadb105 
 
 # ------------------------------------------------------------
-# === 2. Variables (Terraform passes values here) ===
+# === 2. Create linux  users
 # ------------------------------------------------------------
-APP_DIR="/home/ec2-user/mini-amazon-app"
-ENV_FILE="/etc/mini-amazon.env"
-SCHEMA_FILE="$${APP_DIR}/schema.sql"
 
-SERVICE_SRC="$${APP_DIR}/mini-amazon.service"
+# User to run app
+if ! id appuser &>/dev/null; then
+  useradd --system --no-create-home --shell /sbin/nologin appuser
+fi
+
+# Ops user (SSM user)
+if ! id ops &>/dev/null; then
+  useradd --create-home --shell /bin/bash ops
+fi
+
+# ------------------------------------------------------------
+# === 3. Variables (Terraform passes values here) ===
+# ------------------------------------------------------------
+
+APP_DIR="/opt/mini-amazon-app"
+ENV_DIR="/etc/mini-amazon"
+ENV_FILE="$${ENV_DIR}/app.env"
+
 SERVICE_DST="/etc/systemd/system/mini-amazon.service"
-
-# get SSM parameter 
-db_pass=$(aws ssm get-parameter --name "${db_pass_param_name}" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
 
 # DB Variables
 RDS_ENDPOINT="${rds_endpoint}"
 DB_USER="${db_user}"
-DB_PASS="$${db_pass}"
 DB_NAME="store"
 
 # Region and email source
-
 AWS_REGION=us-east-1
 SES_SOURCE=yahiruvc@gmail.com # modify with validated SES AWS source
 
+# get SSM parameter 
+# get and decript db_pass_param_name
+DB_PASS=$(aws ssm get-parameter \
+  --name "${db_pass_param_name}" \
+  --with-decryption \
+  --query "Parameter.Value"\
+  --output text \
+  --region $${AWS_REGION})
+
 # ------------------------------------------------------------
-# === 3. Clone APP code from Git Hub ===
+# === 4. Clone APP code from Git Hub ===
 # ------------------------------------------------------------
-# If we dont have a git in the folder $${APP_DIR}
+
+mkdir -p $${APP_DIR}
 
 if [ ! -d "$${APP_DIR}/.git" ]; then # Clone the GitHub repo
   echo "[INFO] Cloning backend repository..."
-  sudo -u ec2-user git clone \
-    https://github.com/yahiruvc-27/mini-amazon-backend.git "$${APP_DIR}"
+  git clone https://github.com/yahiruvc-27/mini-amazon-backend.git "$${APP_DIR}"
+
 else # We have .git -> we must have an old verison of the repo
   echo "[INFO] Repository exists, pulling latest changes..."
-  sudo -u ec2-user git -C "$${APP_DIR}" pull
+  git -C "$${APP_DIR}" pull
 fi
 
 # ------------------------------------------------------------
-# === 4. Install Python dependencies from requirements.txt ===
-# ------------------------------------------------------------
-# The service runs with ec2-user as owner, if you modify the guinicorn flask service, 
-# beware that u must select the user here as owner
-
-sudo pip3 install -r "$${APP_DIR}/requirements.txt"
-
-# ------------------------------------------------------------
-# === 5. Wait for database to be reachable and operational ===
+# === 5. Install Python dependencies from requirements.txt ===
 # ------------------------------------------------------------
 
-echo "[INFO] Waiting for database to become available..."
+pip3 install -r "$${APP_DIR}/requirements.txt"
+
+# ------------------------------------------------------------
+# === 6. Wait for database to be reachable and operational ===
+# ------------------------------------------------------------
+
+echo "[INFO] Waiting / checking database to become available..."
 
 for i in {1..30}; do
   # attempt connection
   if mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" \
       -e "SELECT 1;" >/dev/null 2>&1; then
+  
     echo "[INFO] Database is reachable and operational"
-    break # If its ready, no need to wait
+    break
   fi
   echo "[INFO] Database not ready yet... retrying"
   sleep 10
 done
 
 # ------------------------------------------------------------
-# 6. Schema initialization lock for a distibuted APP tier
+# 7. Schema initialization lock for a distibuted APP tier
 # ------------------------------------------------------------
 echo "[INFO] Attempting schema initialization lock..."
 
@@ -88,12 +106,10 @@ echo "[INFO] Attempting schema initialization lock..."
 LOCK_RESULT=$(mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" \
   -N -s -e "SELECT GET_LOCK('mini_amazon_schema_init', 60);")
 
-if [ "$${LOCK_RESULT}" != "1" ]; then
+if [ "$${LOCK_RESULT}" = "1" ]; then
 
-  echo "[INFO] Another instance is initializing schema. Skipping."
-
-else
   echo "Attempting to start DB Schema"
+
   # Set up a cleanup method in case of this script failure
   cleanup() {
 
@@ -104,31 +120,27 @@ else
   }
   trap cleanup EXIT # Trap .... EXIT -> do ... on exit
 
-  # === validate DB schema file existance ===
-  if [ ! -f "$${SCHEMA_FILE}" ]; then
-    echo "[ERROR] Schema file not found (missing in Git Hub): $${SCHEMA_FILE}"
-    exit 1 # exit code 1
-  fi
+  # Create DB schema if needed ===
 
-  # === Create DB schema if needed ===
-
-  echo "[INFO] Checking if Databse schema exists..."
   if ! mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" \
       -e "USE $${DB_NAME}" >/dev/null 2>&1; then
 
-    echo "[INFO] Databse Schema not initialized,  runing schema.sql..."
-    # If it doesnt exist create it
+    # Cretae schema -> run schema.sql
     mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" < "$${SCHEMA_FILE}"
+    echo "[INFO] Databse Schema Created"
 
-  else
-    echo "[INFO] Database Sschema already exists. Skipping initialization."
-  fi
+else
+  echo "[INFO] Another instance is initializing schema. Skipping."
 fi
 
 # ------------------------------------------------------------
-# === 7. Create environment file ===
+# === 8. Create environment file ===
 # ------------------------------------------------------------
-echo "[INFO] Writing environment variables..."
+
+mkdir -p "$${ENV_DIR}"
+
+echo "[INFO] Writing environment vars to: $${ENV_FILE}"
+
 cat <<EOF > "$${ENV_FILE}"
 RDS_ENDPOINT=$${RDS_ENDPOINT}
 DB_USER=$${DB_USER}
@@ -138,39 +150,44 @@ AWS_REGION=$${AWS_REGION}
 SES_SOURCE=$${SES_SOURCE}
 EOF
 
-# ------------------------------------------------------------
-# 8. Ensure correct ownership APP files (GitHUb)
-# ------------------------------------------------------------
-chown -R ec2-user:ec2-user "$${APP_DIR}"
+# Fix permisisons
+chmod 640 "$${ENV_FILE}"
+chown root:root "$${ENV_FILE}"
 
 # ------------------------------------------------------------
-# 9. Install systemd service file (COPY to needed path)
+# 9. Ensure correct ownership APP files (GitHUb) cloned -> to appuser
 # ------------------------------------------------------------
-
-if [ ! -f "$${SERVICE_DST}" ]; then
-  echo "Installing guinicorn systemd service file..."
-  cp "$${SERVICE_SRC}" "$${SERVICE_DST}"
-fi
+chown -R appuser:appuser "$${APP_DIR}"
+chmod -R 750 "$${APP_DIR}"
 
 # ------------------------------------------------------------
-# 10. Replace env file (env variables) for service
+# 10. Install systemd service file 
 # ------------------------------------------------------------
 
-if ! grep -q "^EnvironmentFile=$${ENV_FILE}" "$${SERVICE_DST}"; then
-  sed -i "/^\[Service\]/a EnvironmentFile=$${ENV_FILE}" "$${SERVICE_DST}"
-fi
+cat <<EOF > "$${SERVICE_DST}"
+[Unit]
+Description=Mini Amazon Backend Flask App (gunicorn)
+After=network.target
+
+[Service]
+User=appuser
+Group=appuserappuser
+WorkingDirectory=$${APP_DIR}
+EnvironmentFile=$${ENV_FILE}
+ExecStart=/usr/local/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # ------------------------------------------------------------
 # 11. Reload systemd and start service
 # ------------------------------------------------------------
+
 systemctl daemon-reload
 systemctl enable --now mini-amazon
 
-# Check if service is running, sanity check
-
-if systemctl is-active --quiet mini-amazon; then
-  echo "[SUCCESS] mini-amazon service is running"
-else
-  echo "[WARN] mini-amazon service failed to start"
-  systemctl status mini-amazon -l --no-pager
-fi
+# Check if service is running
+systemctl is-active --quiet mini-amazon && echo "[SUCCESS] Service running"

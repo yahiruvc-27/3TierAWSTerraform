@@ -16,3 +16,4 @@ crash.log
 .idea/
 .vscode/
 *.txt
+*.py

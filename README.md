@@ -2,7 +2,9 @@
 
 This project is my personal, production-inspired 3-tier cloud architecture built on AWS using Terraform.
 
-I focuse on architecture good practices: infrastructure design, scalability, fault tolerance, and operational thinking rather than application code alone.
+I focuse on good practices: infrastructure design / plan(diagrams), scalability, fault tolerance, and operational thinking rather than application code alone.
+
+This project intentionally documents my real failures (network policies, load balancing, and distributed start up issues) and engineering decisions used find the root cause and fix it
 
 VERSION 1.0 MVP
 
@@ -29,6 +31,7 @@ Shared Infrastructure
 
 - S3 Gateway Endpoint (private S3 access)
 - SSM Parameter Store (SecureString secrets)
+- SSM Session manager and Linux users with a purpose and permisions
 
 ## Terraform Structure
 
@@ -51,7 +54,7 @@ terraform/
 
 ### Prerequisites
 
-1. AWS Account (access key + secret access key on aws config)
+1. AWS Account (access key ID + secret access key on aws config)
 2. Terraform
 3. AWS CLI configured
 4. SSH key (optional, for SSH/debug Linux instances) -> comming soom SSM Session manager
@@ -60,7 +63,7 @@ terraform/
 - Create {bucket_name} bucket -> place {bucket_name} in networking/terraform.tfvars
 - Enable bucket encryption: S3 managed keys  (SSE-S3)
 - Block public access
-- Upoad the 6 .jpeg images
+- Upload the 6 .jpeg images names [red-mug, blue-shirt, notepad, headphones, bottle, backpack]
 
 ### Step-by-Step Deployment
 Do -> terraform (init, plan, apply) in each of the modules in order
@@ -81,9 +84,9 @@ Do terrafrom destroy in each of the modules in inverse order creation
 
 ## Important Design Decisions
 - RDS start-up (schema, db, table creation) in a ASG enviroment
-- Security (IAM policies / Roles, SG, endpoint, IAM Policies... )
+- Security (IAM policies / Roles, SSM Session Manager, SG, GW endpoint, IAM Policies... )
 - EC2 User Data templates
-- IaC (big learning moments, debugg and reading documentation)
+- IaC (big learning moments, debugg and troubleshooting)
 
 ## Future work
 
@@ -94,6 +97,5 @@ Security
 Functionality
 - Log Inn (Account creation and auth for the user)
 - Add SQS (Decouple & Async order processing)
-- Add analytics (sales)
 
 

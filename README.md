@@ -6,6 +6,8 @@ The focus of this project is infrastructure design, scalability, fault tolerance
 
 I intentionally document real failures encountered during implementation (network policies, load balancing configuration and distributed startup behavior) as well as  the engineering decisions taken to diagnose root causes and implement fixes.
 
+[Failures and fixes](/docs/failures)
+
 ## Architecture Overview
 
 Web Tier

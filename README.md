@@ -1,6 +1,6 @@
 # Highly Available 3-Tier AWS Architecture (Terraform)
 
-This repository contains a production-inspired 3-tier AWS architecture built with Terraform.
+This repository contains my personal project, production-inspired 3-tier AWS architecture built with Terraform.
 
 The focus of this project is infrastructure design, scalability, fault tolerance, and operational reasoning, not application feature development(Software Development).
 

@@ -11,7 +11,6 @@ data "aws_s3_bucket" "s3_products_bucket" {
   bucket = data.terraform_remote_state.networking.outputs.s3_bucket_name
 }
 
-
 resource "aws_security_group" "bastion_sg" {
 
   name        = "${data.terraform_remote_state.networking.outputs.project_name}-bastion-sg"
@@ -202,18 +201,18 @@ resource "aws_security_group_rule" "egress_http_web_internalalb" {
 
 # For testing only -> PROD end to end must be comented
 # Folllow least principle priviledge
-# API calls must arrive to proxu ALB iternal
-resource "aws_security_group_rule" "egress_http_web_app" {
+# API calls must arrive to  ALB internal
+# resource "aws_security_group_rule" "egress_http_web_app" {
 
-  description = "Allow API rest calls HTTP to APP tier"
-  type        = "egress"
-  from_port   = "5000"
-  to_port     = "5000"
-  protocol    = "tcp"
+#   description = "Allow API rest calls HTTP to APP tier"
+#   type        = "egress"
+#   from_port   = "5000"
+#   to_port     = "5000"
+#   protocol    = "tcp"
 
-  security_group_id        = aws_security_group.web_sg.id
-  source_security_group_id = aws_security_group.app_sg.id
-}
+#   security_group_id        = aws_security_group.web_sg.id
+#   source_security_group_id = aws_security_group.app_sg.id
+# }
 
 resource "aws_security_group_rule" "egress_package_download_web" {
   description       = "Download packages"
@@ -284,17 +283,17 @@ resource "aws_security_group_rule" "ssh_ingress_bastion_app" {
 # For testing only -> PROD end to end must be comented
 # Folllow least principle priviledge
 # API calls must arrive to proxu ALB iternal
-resource "aws_security_group_rule" "ingress_http_web_app" {
+# resource "aws_security_group_rule" "ingress_http_web_app" {
 
-  description = "Allow API rest calls HTTP to APP tierfrom WEB tier"
-  type        = "ingress"
-  from_port   = "5000"
-  to_port     = "5000"
-  protocol    = "tcp"
+#   description = "Allow API rest calls HTTP to APP tierfrom WEB tier"
+#   type        = "ingress"
+#   from_port   = "5000"
+#   to_port     = "5000"
+#   protocol    = "tcp"
 
-  security_group_id        = aws_security_group.app_sg.id
-  source_security_group_id = aws_security_group.web_sg.id
-}
+#   security_group_id        = aws_security_group.app_sg.id
+#   source_security_group_id = aws_security_group.web_sg.id
+# }
 
 # OUTBOUND
 resource "aws_security_group_rule" "egress_package_download_app" {
@@ -338,6 +337,12 @@ resource "aws_security_group_rule" "ingress_app_rds" {
 # -------------------------------------------------------
 # ============ CREATE IAM ROLES FOR EC2 =================
 # -------------------------------------------------------
+
+# 1.- Create aws_iam_policy_document [Trust Policy] (who can assume this role)
+# 2.- Create aws_iam_role (role itself)
+# 3.- Create aws_iam_policy_document (IAM Policy, content)
+# 4.- Create aws_iam_policy (IAM Policy) -> document to policy
+# 5.- Create aws_iam_role_policy_attachment -> Give the policy to the role
 
 # Create a trsut policy to allow EC2 instances to assume the IAM Service Role
 data "aws_iam_policy_document" "ec2_assume_role" {
@@ -433,7 +438,7 @@ data "aws_iam_policy_document" "app_policy_data" {
       "logs:PutLogEvents"
     ]
 
-    resources = ["*"]
+    resources = ["*"] # later work to secure and send the logs to CW (not implemented rigth now)
   }
 
   # ------------------------------------------------------------
@@ -464,24 +469,6 @@ data "aws_iam_policy_document" "app_policy_data" {
     resources = ["*"]
   }
 }
-# === Enable SSM Session manager =====
-# 1. AWS Managed Policy ARN AmazonSSMManagedInstanceCore 
-locals {
-  ssm_managed_policy = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-# 2. Attach SSM policy to the WEB role
-resource "aws_iam_role_policy_attachment" "web_ssm_attach" {
-  role       = aws_iam_role.web_role.name
-  policy_arn = local.ssm_managed_policy
-}
-
-# 3. Attach SSM policy to the APP role
-resource "aws_iam_role_policy_attachment" "app_ssm_attach" {
-  role       = aws_iam_role.app_role.name
-  policy_arn = local.ssm_managed_policy
-}
-
 
 # Create the WEB policy resource with the previus data (aws_iam_policy_document)
 resource "aws_iam_policy" "web_policy" {
@@ -507,6 +494,33 @@ resource "aws_iam_role_policy_attachment" "app_attach_policy" {
   policy_arn = aws_iam_policy.app_policy.arn
 }
 
+# -------------------------------------------------------
+# ============ Enable SSM Session manager ============
+# -------------------------------------------------------
+# 1. AWS Managed Policy ARN AmazonSSMManagedInstanceCore 
+locals {
+  ssm_managed_policy = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# 2. Attach SSM policy to the WEB role
+resource "aws_iam_role_policy_attachment" "web_ssm_attach" {
+  role       = aws_iam_role.web_role.name
+  policy_arn = local.ssm_managed_policy
+}
+
+# 3. Attach SSM policy to the APP role
+resource "aws_iam_role_policy_attachment" "app_ssm_attach" {
+  role       = aws_iam_role.app_role.name
+  policy_arn = local.ssm_managed_policy
+}
+# === End Enable SSM Session manager =====
+
+# -------------------------------------------------------
+# ============ CREATE Instance Profiles FOR EC2 =================
+# -------------------------------------------------------
+
+# Use a Role and turn it into Instance profile 
+
 # Create WEB instance profile
 resource "aws_iam_instance_profile" "web_profile" {
   name = "${data.terraform_remote_state.networking.outputs.project_name}-web-profile"
@@ -518,3 +532,120 @@ resource "aws_iam_instance_profile" "app_profile" {
   name = "${data.terraform_remote_state.networking.outputs.project_name}-app-profile"
   role = aws_iam_role.app_role.name
 }
+
+# -------------------------------------------------------
+# ============ Create IAM AppOpsEngineerRole Role  ============
+# -------------------------------------------------------
+# Creatinng AppOpsEngineerRole
+
+# 1.- Create Trust Policy (who can assume this role)
+# 2.- Create aws_iam_role (role itself)
+# 3.- Create aws_ssm_document (SSM restriction -> ops user)
+# 4.- Create aws_iam_role_policy (IAM Policy) -> what cna this role do 
+
+
+# Policy to allow User X to assume this role
+data "aws_iam_policy_document" "AppOps_assume_role_policy" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/AppOps"]
+    }
+
+    actions = ["sts:AssumeRole"]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+      values   = ["true"]
+    }
+  }
+}
+
+# Create an empty role for AppOpsEngineerRole
+resource "aws_iam_role" "AppOpsEngineerRole" {
+
+  name               = "AppOpsEngineerRole"
+  assume_role_policy = data.aws_iam_policy_document.AppOps_assume_role_policy.json # Allow User X to assume role
+
+  tags = {
+    Project = data.terraform_remote_state.networking.outputs.project_name
+    Role    = "AppOpsEngineerRole"
+  }
+}
+
+resource "aws_ssm_document" "session_manager_doc_appops" {
+  name            = "SSM-AppOpsConfig"
+  document_type   = "Session"
+  document_format = "JSON"
+
+  content = jsonencode({
+    schemaVersion = "1.0"
+    description   = "App Ops restricted session test"
+    sessionType   = "Standard_Stream"
+    inputs = {
+      runAsEnabled     = true
+      runAsDefaultUser = "ops"
+      shellProfile = {
+        linux = "exec /bin/bash"
+      }
+      cloudWatchLogGroupName      = "/aws/ssm/session-logs"
+      cloudWatchEncryptionEnabled = false # True for real enterprise env
+      idleSessionTimeout          = "10"
+    }
+  })
+}
+
+# Create IAM policy for the  role and attach it
+resource "aws_iam_role_policy" "AppOps_ssm_enforcement" {
+  name = "SSMDocumentEnforcement"
+  role = aws_iam_role.AppOpsEngineerRole.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        # Permission to use the specific SSM Document
+        Effect   = "Allow"
+        Action   = "ssm:StartSession"
+        Resource = [aws_ssm_document.session_manager_doc_appops.arn]
+      },
+      {
+        # Access Instances only if tagged "ssm:resourceTag/SSMAccess" : "app-ops",
+        Effect   = "Allow"
+        Action   = "ssm:StartSession"
+        Resource = "*"
+
+        "Condition": {
+          "Bool": {
+            "ssm:SessionDocumentAccessCheck": true
+          },
+          "StringEquals": {
+            "ssm:resourceTag/SSMAccess": "app-ops"
+          }
+        }
+      },
+      {
+        # Utility permissions
+        Effect = "Allow"
+        Action = [
+          "ssm:DescribeInstanceInformation",
+          "ssm:GetConnectionStatus",
+          "ssm:TerminateSession",
+          "ssm:DescribeSessions",
+          "ec2:DescribeInstances"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Future work... CW Logs
+
+# resource "aws_cloudwatch_log_group" "ssm_logs" {
+#   name              = "/${data.terraform_remote_state.networking.outputs.project_name}/ssm/session-logs"
+#   retention_in_days = 7 # Set retention period = to compliance requirements
+# }

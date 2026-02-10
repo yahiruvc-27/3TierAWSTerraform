@@ -34,9 +34,10 @@ Please check "providers.tf" -> aws region
 This is the first terraform root module
 Must apply **first**.
 
-Go to /security/ afterwards
+Go to /security/ after this root module
 
 ```bash
 terraform init
 terrafrom plan
 terraform apply
+```

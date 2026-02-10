@@ -33,6 +33,7 @@ fi
 APP_DIR="/opt/mini-amazon-app"
 ENV_DIR="/etc/mini-amazon"
 ENV_FILE="$${ENV_DIR}/app.env"
+SCHEMA_FILE="$${APP_DIR}/schema.sql"
 
 SERVICE_DST="/etc/systemd/system/mini-amazon.service"
 
@@ -43,7 +44,7 @@ DB_NAME="store"
 
 # Region and email source
 AWS_REGION=us-east-1
-SES_SOURCE=yahiruvc@gmail.com # modify with validated SES AWS source
+SES_SOURCE=example@gmail.com # modify with validated SES AWS source
 
 # get SSM parameter 
 # get and decript db_pass_param_name
@@ -128,7 +129,7 @@ if [ "$${LOCK_RESULT}" = "1" ]; then
     # Cretae schema -> run schema.sql
     mysql -h "$${RDS_ENDPOINT}" -u "$${DB_USER}" -p"$${DB_PASS}" < "$${SCHEMA_FILE}"
     echo "[INFO] Databse Schema Created"
-
+  fi 
 else
   echo "[INFO] Another instance is initializing schema. Skipping."
 fi
@@ -144,7 +145,7 @@ echo "[INFO] Writing environment vars to: $${ENV_FILE}"
 cat <<EOF > "$${ENV_FILE}"
 RDS_ENDPOINT=$${RDS_ENDPOINT}
 DB_USER=$${DB_USER}
-DB_PASS=$${db_pass}
+DB_PASS=$${DB_PASS}
 DB_NAME=$${DB_NAME}
 AWS_REGION=$${AWS_REGION}
 SES_SOURCE=$${SES_SOURCE}
@@ -171,7 +172,7 @@ After=network.target
 
 [Service]
 User=appuser
-Group=appuserappuser
+Group=appuser
 WorkingDirectory=$${APP_DIR}
 EnvironmentFile=$${ENV_FILE}
 ExecStart=/usr/local/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
@@ -183,7 +184,25 @@ WantedBy=multi-user.target
 EOF
 
 # ------------------------------------------------------------
-# 11. Reload systemd and start service
+# 11. Configure sudoers file for  ops user
+# ------------------------------------------------------------
+cat <<EOF > /etc/sudoers.d/ops-mini-amazon
+# Ops:  incident-response for Mini Amazon app
+User_Alias OPS = ops
+
+Cmnd_Alias MINI_AMAZON_SVC = \
+  /bin/systemctl status mini-amazon, \
+  /bin/systemctl restart mini-amazon, \
+  /bin/systemctl stop mini-amazon, \
+  /bin/journalctl -u mini-amazon
+
+OPS ALL=(root) NOPASSWD: MINI_AMAZON_SVC
+EOF
+
+chmod 440 /etc/sudoers.d/ops-mini-amazon
+
+# ------------------------------------------------------------
+# 12. Reload systemd and start service
 # ------------------------------------------------------------
 
 systemctl daemon-reload

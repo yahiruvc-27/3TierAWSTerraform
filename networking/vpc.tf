@@ -200,6 +200,9 @@ resource "aws_vpc_endpoint" "s3_gw_endpoint" {
 }
 
 data "aws_iam_policy_document" "s3_endpoint_policy" {
+  # ------------------------------------------------------------
+  # 1. Allow list & GetObject to my products S3 bucket
+  # ------------------------------------------------------------
   statement {
     sid    = "AllowWebTierReadOnlyImages-Read Products"
     effect = "Allow"
@@ -220,8 +223,11 @@ data "aws_iam_policy_document" "s3_endpoint_policy" {
       "${data.aws_s3_bucket.s3_products_bucket.arn}/*"
     ]
   }
+  # ------------------------------------------------------------
+  # 2: Fix Linux Packages instalation -> remove restriction 
+  # to reach AWS S3 package repositories
+  # ------------------------------------------------------------
 
-  # Statement 2: The Fix for Linux Packages
   statement {
     sid    = "AllowAmazonLinuxRepoAccess"
     effect = "Allow"

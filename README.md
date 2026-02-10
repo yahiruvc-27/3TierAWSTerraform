@@ -1,12 +1,10 @@
 # Highly Available 3-Tier AWS Architecture (Terraform)
 
-This project is my personal, production-inspired 3-tier cloud architecture built on AWS using Terraform.
+This repository contains a production-inspired 3-tier AWS architecture built with Terraform.
 
-I focuse on good practices: infrastructure design / plan(diagrams), scalability, fault tolerance, and operational thinking rather than application code alone.
+The focus of this project is infrastructure design, scalability, fault tolerance, and operational reasoning, not application feature development(Software Development).
 
-This project intentionally documents my real failures (network policies, load balancing, and distributed start up issues) and engineering decisions used find the root cause and fix it
-
-VERSION 1.0 MVP
+I intentionally document real failures encountered during implementation (network policies, load balancing configuration and distributed startup behavior) as well as  the engineering decisions taken to diagnose root causes and implement fixes.
 
 ## Architecture Overview
 
@@ -67,6 +65,13 @@ terraform/
 
 ### Step-by-Step Deployment
 Do -> terraform (init, plan, apply) in each of the modules in order
+
+```bash
+cd .\<dir>\
+terraform init
+terraform plan
+terarform apply
+```
 1. /networking/
 2. /security/
 3. /database/
@@ -98,4 +103,13 @@ Functionality
 - Log Inn (Account creation and auth for the user)
 - Add SQS (Decouple & Async order processing)
 
+## Notes
+
+The main goal of this project is to increase my understanding of cloud systems at both a high level and a deeper level when required.
+
+I experimented system behavior with misconfiguration, controlled failure, root cause analysis and how t fix them, in order to understand not just *how* services work, but *why* specific design decisions matter in real environments.
+
+This version (v1.0) does not include a CI/CD pipeline by design. The focus was placed on infrastructure fundamentals, runtime behavior, and failure handling rather than deployment automation.
+
+I will continue to evolve this project in the future , with improvements in security, resilience and automation —> each driven by clear purpose rather than just add complexity.
 

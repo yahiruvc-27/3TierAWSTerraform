@@ -11,6 +11,6 @@ resource "aws_ssm_parameter" "db_password" {
 resource "random_password" "db_password" {
   length  = 16
   special = true
-
+  # Avoid apply errors by axcluding not authorized characters
   override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
 }

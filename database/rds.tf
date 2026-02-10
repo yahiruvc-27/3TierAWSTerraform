@@ -41,7 +41,7 @@ resource "aws_db_instance" "rds_instance" {
 
   backup_retention_period = 0     # For how may days we mantain a backup
   skip_final_snapshot     = true  # Create a snapshot (copy of last RDS instance state) before termination
-  deletion_protection     = false # Avoid mistakes -> a must for PRO env 
+  deletion_protection     = false # Avoid mistakes -> True is a must for PRO env 
 
   tags = {
     Name = "${data.terraform_remote_state.networking.outputs.project_name}-mysql-rds"

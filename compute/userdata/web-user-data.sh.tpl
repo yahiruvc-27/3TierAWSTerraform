@@ -12,6 +12,17 @@ set -euxo pipefail
 dnf update -y
 dnf install -y nginx git awscli
 
+
+# User to run app
+if ! id appuser &>/dev/null; then
+  useradd --system --no-create-home --shell /sbin/nologin appuser
+fi
+
+# Ops user (SSM user)
+if ! id ops &>/dev/null; then
+  useradd --create-home --shell /bin/bash ops
+fi
+
 # === 2. Define variables used === 
 
 # NOTE: MUST REPLACE S3_BUCKET IP_BACKEND -> real values
@@ -36,7 +47,6 @@ else # just update or pull
   cd "$${WEBROOT}"
   git pull
 fi
-
 
 # 5. Config file for nginx -> get backend endpoint 
 

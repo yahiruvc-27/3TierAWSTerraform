@@ -50,19 +50,18 @@ data "aws_ssm_parameter" "db_password" {
 
 #   key_name = var.app_key_pair_name
 
-#   #iam_instance_profile = aws_iam_instance_profile.app_profile.name
+#   # attach existing instance profile from /security root module 
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.app_instance_profile_name
 
-  # user_data = base64encode(
-  #   templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
-  #     rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
-  #     "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
-  #     db_user = data.terraform_remote_state.database.outputs.db_username
-  #     #db_pass = data.aws_ssm_parameter.db_password.value # we dont want text plain pass
-  #     # pass the SSM param value 
-  #     db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
-  #   })
-  # )
+#   user_data = base64encode(
+#     templatefile("${path.module}/userdata/app-user-data.sh.tpl", {
+#       rds_endpoint = replace(data.terraform_remote_state.database.outputs.db_endpoint,
+#       "/:[0-9]+$/", "") # Remove port ....:3306 -> dont need it
+#       db_user = data.terraform_remote_state.database.outputs.db_username
+#       # pass the SSM param value 
+#       db_pass_param_name = data.terraform_remote_state.database.outputs.ssm_db_password_name
+#     })
+#   )
 
 #   root_block_device {
 #     volume_size = 30
@@ -72,6 +71,9 @@ data "aws_ssm_parameter" "db_password" {
 #   tags = {
 #     Name = "${data.terraform_remote_state.networking.outputs.project_name}-app-ec2"
 #     Tier = "app"
+#     # This tag (SSMAccess/app-ops) key/value enables the AppOps role access
+#     SSMAccess = "app-ops"
+#     Project   = "${data.terraform_remote_state.networking.outputs.project_name}"
 #   }
 # }
 
@@ -122,6 +124,7 @@ resource "aws_launch_template" "app_launch_template" {
     tags = {
       Name = "${data.terraform_remote_state.networking.outputs.project_name}-app"
       Tier = "app"
+      SSMAccess = "app-ops"
     }
   }
 }

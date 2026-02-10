@@ -35,8 +35,6 @@ data "aws_s3_bucket" "s3_products_bucket" {
 
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.web_instance_profile_name
 
-#   #user_data = file("${path.module}/userdata/web.sh")
-
 #   user_data = base64encode(
 #     templatefile("${path.module}/userdata/web-user-data.sh.tpl", {
 #       s3_bucket    = data.aws_s3_bucket.s3_products_bucket.bucket

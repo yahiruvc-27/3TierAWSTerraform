@@ -6,14 +6,19 @@ data "aws_ami" "ami_amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023*-x86_64"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 }
 
 # Reference the bucket with product images
 data "aws_s3_bucket" "s3_products_bucket" {
   # Manually created s3 bucket to reference here
-  bucket = data.terraform_remote_state.security.outputs.s3_bucket_name
+  bucket = data.terraform_remote_state.security.outputs.products_bucket_name
 }
 
 # 2.- Create and configure instance WEB tier
@@ -31,7 +36,7 @@ data "aws_s3_bucket" "s3_products_bucket" {
 
 #   associate_public_ip_address = false
 
-#   key_name = var.web_key_pair_name
+#   #key_name = var.web_key_pair_name
 
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.web_instance_profile_name
 
@@ -50,6 +55,9 @@ data "aws_s3_bucket" "s3_products_bucket" {
 #   tags = {
 #     Name = "${data.terraform_remote_state.networking.outputs.project_name}-web-ec2"
 #     Tier = "web"
+#     SSMAccess = "app-ops" # This tag (SSMAccess/app-ops) key/value enables the AppOps role access
+#     Environment = local.environment
+#     Project   = "${data.terraform_remote_state.networking.outputs.project_name}"
 #   }
 # }
 
@@ -60,7 +68,7 @@ resource "aws_launch_template" "web_launch_template" {
   instance_type = var.web_instance_size # Instance class and size
 
   # Associate EC2 Instance Key Pair
-  key_name = var.web_key_pair_name
+  #key_name = var.web_key_pair_name
 
   # Attach a SG
   vpc_security_group_ids = [
@@ -85,7 +93,7 @@ resource "aws_launch_template" "web_launch_template" {
 
     ebs {
       volume_size           = 30
-      volume_type           = "gp3"
+      volume_type           = "gp2"
       delete_on_termination = true # What happens when the instance is deleted, False = take snapshot
     }
   }
@@ -94,8 +102,11 @@ resource "aws_launch_template" "web_launch_template" {
     resource_type = "instance"
 
     tags = {
-      Name = "${data.terraform_remote_state.networking.outputs.project_name}-web"
-      Tier = "web"
+      Name        = "${data.terraform_remote_state.networking.outputs.project_name}-web-ec2"
+      Tier        = "web"
+      SSMAccess   = "app-ops" # This tag (SSMAccess/app-ops) key/value enables the AppOps role access
+      Environment = local.environment
+      Project     = "${data.terraform_remote_state.networking.outputs.project_name}"
     }
   }
 }

@@ -1,3 +1,7 @@
+locals {
+  ssm_log_bucket_name = "${var.project_name}-${var.environment}-ssm-ec2-logs"
+}
+
 # === Create VPC ===
 resource "aws_vpc" "main-vpc" {
 
@@ -172,26 +176,31 @@ resource "aws_route_table_association" "as-database" {
 # EC2 IAM Role & VPC Endpoint Policy & Private Bucket
 
 data "aws_s3_bucket" "s3_products_bucket" {
-  # Manually created s3 bucket to reference here
-  bucket = var.s3_bucket_name
+  # Manually created s3 bucket, just reference here
+  # This bucket hold images pre loaded (outside terraform)
+  bucket = var.products_bucket_name
 }
 
+# Select Endpoint Type and service
 data "aws_vpc_endpoint_service" "s3_service" {
 
   service      = "s3"
   service_type = "Gateway"
 }
 
+# Crete Enpoint GW
 resource "aws_vpc_endpoint" "s3_gw_endpoint" {
 
   vpc_id            = aws_vpc.main-vpc.id
   service_name      = data.aws_vpc_endpoint_service.s3_service.service_name
   vpc_endpoint_type = "Gateway" # Needed GW EndP for S3
 
+  # An endpoit needs to be associated at a RT level
   route_table_ids = [
     aws_route_table.private-rt.id
   ]
 
+  # IAM Permissions allow / deny permissions for the endpoint
   policy = data.aws_iam_policy_document.s3_endpoint_policy.json
 
   tags = {
@@ -244,6 +253,27 @@ data "aws_iam_policy_document" "s3_endpoint_policy" {
       "arn:aws:s3:::amazonlinux.us-east-1.amazonaws.com/*",
       "arn:aws:s3:::amazonlinux-2-repos-us-east-1/*",
       "arn:aws:s3:::packages.us-east-1.amazonaws.com/*"
+    ]
+  }
+
+  # ------------------------------------------------------------
+  # 3: Allow traffic for S3 SSM logging 
+  # ------------------------------------------------------------
+  statement {
+    sid    = "AllowSSMSessionLogging"
+    effect = "Allow"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions = [
+      "s3:PutObject",
+      "s3:GetEncryptionConfiguration",
+      "s3:GetBucketLocation"
+    ]
+    resources = [
+      "arn:aws:s3:::${local.ssm_log_bucket_name}",
+      "arn:aws:s3:::${local.ssm_log_bucket_name}/*"
     ]
   }
 

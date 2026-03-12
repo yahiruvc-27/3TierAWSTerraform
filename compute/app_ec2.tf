@@ -31,6 +31,9 @@ data "aws_ssm_parameter" "db_password" {
   with_decryption = true
 }
 
+locals {
+  environment = data.terraform_remote_state.networking.outputs.environment
+}
 
 # === 2.- Create and configure instance APP tier====
 # UNCOMMENT THIS BLOCKblock  to create a single APP tier instance
@@ -39,7 +42,6 @@ data "aws_ssm_parameter" "db_password" {
 #   ami           = data.aws_ami.ami_amazon_linux.id
 #   instance_type = var.app_instance_size
 
-#   #subnet_id = aws_subnet.private_sb["private-a-app"].id
 #   subnet_id = data.terraform_remote_state.networking.outputs.private_subnet_ids["private-a-app"]
 
 #   vpc_security_group_ids = [
@@ -48,7 +50,7 @@ data "aws_ssm_parameter" "db_password" {
 
 #   associate_public_ip_address = false
 
-#   key_name = var.app_key_pair_name
+#   #key_name = var.app_key_pair_name
 
 #   # attach existing instance profile from /security root module 
 #   iam_instance_profile = data.terraform_remote_state.security.outputs.app_instance_profile_name
@@ -71,8 +73,8 @@ data "aws_ssm_parameter" "db_password" {
 #   tags = {
 #     Name = "${data.terraform_remote_state.networking.outputs.project_name}-app-ec2"
 #     Tier = "app"
-#     # This tag (SSMAccess/app-ops) key/value enables the AppOps role access
-#     SSMAccess = "app-ops"
+#     SSMAccess = "app-ops" # This tag (SSMAccess/app-ops) key/value enables the AppOps role access
+#     Environment = local.environment
 #     Project   = "${data.terraform_remote_state.networking.outputs.project_name}"
 #   }
 # }
@@ -82,10 +84,10 @@ data "aws_ssm_parameter" "db_password" {
 resource "aws_launch_template" "app_launch_template" {
   name_prefix   = "${data.terraform_remote_state.networking.outputs.project_name}-app-"
   image_id      = data.aws_ami.ami_amazon_linux.id # AMI
-  instance_type = var.app_instance_size                 # Instance class and size
+  instance_type = var.app_instance_size            # Instance class and size
 
   # Associate EC2 Instance Key Pair
-  key_name = var.app_key_pair_name
+  #key_name = var.app_key_pair_name
 
   # Attach a SG
   vpc_security_group_ids = [
@@ -122,9 +124,11 @@ resource "aws_launch_template" "app_launch_template" {
     resource_type = "instance"
 
     tags = {
-      Name = "${data.terraform_remote_state.networking.outputs.project_name}-app"
-      Tier = "app"
-      SSMAccess = "app-ops"
+      Name        = "${data.terraform_remote_state.networking.outputs.project_name}-app"
+      Tier        = "app"
+      SSMAccess   = "app-ops"
+      Environment = local.environment
+      Project     = "${data.terraform_remote_state.networking.outputs.project_name}"
     }
   }
 }

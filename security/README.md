@@ -30,11 +30,11 @@ This module defines SG, Instance profiles (EC2) and IAM Policies.
 - SSM parameter name for DB password
 
 ## Apply Order
-Must be applied **after networking**.
+Must be applied **after logging**.
 Go to /database/ afterwards
 
 ```bash
 terraform init
 terrafrom plan
 terraform apply
-
+```

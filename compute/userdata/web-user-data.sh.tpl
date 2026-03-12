@@ -108,4 +108,7 @@ systemctl daemon-reload
 systemctl enable --now nginx
 
 # Oheck if NGINX is working
-systemctl is-active nginx || systemctl status nginx -l --no-pager
+systemctl is-active --quiet nginx && echo "[SUCCESS] Service running"
+
+#systemctl stop sshd
+#systemctl disable sshd

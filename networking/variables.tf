@@ -40,7 +40,12 @@ variable "database-subnets" {
   }))
 }
 
-variable "s3_bucket_name" {
+variable "products_bucket_name" {
   description = "S3 bucket product images name"
+  type        = string
+}
+
+variable "environment" {
+  description = "Identifier for environment"
   type        = string
 }

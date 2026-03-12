@@ -210,3 +210,6 @@ systemctl enable --now mini-amazon
 
 # Check if service is running
 systemctl is-active --quiet mini-amazon && echo "[SUCCESS] Service running"
+
+# systemctl stop sshd
+# systemctl disable sshd

@@ -17,7 +17,6 @@ Schema initialization was not protected against parallel runs.
 This is a distributed systems problem(script), not a database bug.
 
 # Note
-s
 For this MVP version 1.0, I intentionally started Db schema on EC2 startup ->  to force myself to deal with distributed env issues. 
 
 I am aware (of other configuration tools) that for production, this (one time job) will be handled by a separate script or ideally pipeline step to decouple ASG provisioning from database schema and start up.

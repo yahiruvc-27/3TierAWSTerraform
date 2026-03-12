@@ -34,7 +34,7 @@ Please check "providers.tf" -> aws region
 This is the first terraform root module
 Must apply **first**.
 
-Go to /security/ after this root module
+Go to /logging/ after this root module
 
 ```bash
 terraform init

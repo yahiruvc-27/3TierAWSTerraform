@@ -1,5 +1,6 @@
 output "vpc_id" {
-  value = aws_vpc.main-vpc.id
+  description = "VPC ID"
+  value       = aws_vpc.main-vpc.id
 }
 
 output "public_subnet_ids" {
@@ -22,9 +23,17 @@ output "project_name" {
   value       = var.project_name
 }
 
-output "s3_bucket_name" {
+output "products_bucket_name" {
   description = "S3 Products bucket name"
-  value       = var.s3_bucket_name
+  value       = var.products_bucket_name
 }
 
+output "environment" {
+  description = "Naming for env of deployment"
+  value       = var.environment
+}
 
+output "ssm_log_bucket_name" {
+  description = "S3 SSM log bucket name"
+  value       = local.ssm_log_bucket_name
+}

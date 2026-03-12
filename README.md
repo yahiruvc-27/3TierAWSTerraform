@@ -33,10 +33,17 @@ Shared Infrastructure
 - SSM Parameter Store (SecureString secrets)
 - SSM Session manager and Linux users with a purpose and permisions
 
+Secure Auditable EC2 SSM acess + log
+- CW log group
+- S3 for long term cheaper storage of
+- IAM Policies to enable EC2 permissions for logging
+- AmazonSSMManagedInstanceCore -> SSM Agent 
+
 ## Terraform Structure
 
 terraform/
 - networking/   # VPC, subnets, routes, endpoints
+- logging/      # CW and S3 storage and IAM permissions for SSM session logs
 - security/     # Security Groups, IAM roles
 - database/     # RDS, subnet groups
 - compute/      # EC2, ASG, ALB, Launch Templates
@@ -50,6 +57,13 @@ terraform/
 
 [Purchase Products Flow](docs/architecture/purchase-flow.pdf)
 
+## Latest release
+
+Secure Auditable EC2 SSM acess + log
+*Click to README.md*
+
+[![SSH vs SSM](docs/architecture/SSHvsSSM.png)](logging/README.md)
+
 ## How to Run This Project
 
 ### Prerequisites
@@ -57,7 +71,7 @@ terraform/
 1. AWS Account (access key ID + secret access key on aws config)
 2. Terraform
 3. AWS CLI configured
-4. SSH key (optional, for SSH/debug Linux instances) -> comming soom SSM Session manager
+4. SSH key (eliminated) -> replaced by  SSM Session manager
 5. SES verified source
 6. S3 bucket with 6 .jpeg images
 - Create {bucket_name} bucket -> place {bucket_name} in networking/terraform.tfvars
@@ -75,9 +89,10 @@ terraform plan
 terarform apply
 ```
 1. /networking/
-2. /security/
-3. /database/
-4. /compute/
+2. /logging/
+3. /security/
+4. /database/
+5. /compute/
 
 *Each root module consumes outputs from the previous one via terraform_remote_state
 
@@ -87,6 +102,7 @@ Do terrafrom destroy in each of the modules in inverse order creation
 1. /compute/
 2. /database/
 3. /security/
+4. /logging/
 4. /networking/
 
 ## Important Design Decisions
@@ -99,7 +115,7 @@ Do terrafrom destroy in each of the modules in inverse order creation
 
 Security
 - Use HTTPS ACM (Register a domain name)
-- Use SSM session manager (delete SSH, key pairs and bastion host)
+- **Implemented** Use SSM session manager (deleted SSH, key pairs and bastion host)
 
 Functionality
 - Log Inn (Account creation and auth for the user)
@@ -109,7 +125,7 @@ Functionality
 
 The main goal of this project is to increase my understanding of cloud systems at both a high level and a deeper level when required.
 
-I experimented system behavior with misconfiguration, controlled failure, root cause analysis and how t fix them, in order to understand not just *how* services work, but *why* specific design decisions matter in real environments.
+I experimented system behavior with misconfiguration, controlled failure, root cause analysis and how to fix them, in order to understand not just *how* services work, but *why* specific design decisions matter in real environments.
 
 This version (v1.0) does not include a CI/CD pipeline by design. The focus was placed on infrastructure fundamentals, runtime behavior, and failure handling rather than deployment automation.
 

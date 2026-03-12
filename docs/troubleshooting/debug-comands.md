@@ -106,3 +106,30 @@ mysql -h $RDS_ENDPOINT -u $DB_USER -p$DB_PASS -e "USE store; UPDATE products SET
 ```bash
 mysql -h $RDS_ENDPOINT -u $DB_USER -p$DB_PASS -e "USE store; UPDATE products SET image_key='red-mug.jpeg' WHERE product_id=1;"
 ```
+
+## SSM Session start
+
+**Check IAM caller identity (check if assume role worked)**
+
+```bash
+aws sts get-caller-identity
+```
+
+**Assume a role on CLI**
+
+```bash
+aws sts assume-role `
+  --profile <CLIProfile> `
+  --role-arn arn:aws:iam::<AccountID>:role/AppOpsEngineerRole `
+  --role-session-name <SessionName> `
+  --serial-number arn:aws:iam::<AccountID>:mfa/<RoleName> `
+  --token-code <MFACode>
+  ```
+
+**Start SSM Session to EC2**
+
+```bash 
+aws ssm start-session --target <InstanceID> --document-name <DocumentName>
+
+Custom Document name = SSM-AppOpsConfig
+```

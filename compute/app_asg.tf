@@ -93,6 +93,18 @@ resource "aws_autoscaling_group" "app_asg" {
     value               = "${data.terraform_remote_state.networking.outputs.project_name}-app"
     propagate_at_launch = true
   }
+
+  tag {
+    key                 = "SSMAccess"
+    value               = "app-ops"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = local.environment
+    propagate_at_launch = true
+  }
 }
 
 # Create ASG -> TargetTrackingPolicy for APP ASG
